@@ -44,7 +44,12 @@ const ProductCard = ({ product, onRecommend, isSelected = false }) => {
       <p><strong>Sub-category:</strong> {product.sub_category.join(', ')}</p>
       <p><strong>Brand:</strong> {product.brand}</p>
       <p><strong>Price:</strong> ₹{product.sale_price}</p>
-      {product.description && <p><strong>Description:</strong> {product.description}</p>}
+      {product.description && (
+        <p>
+          <strong>Description:</strong>{' '}
+          {product.description.split(' ').slice(0, 40).join(' ')}{product.description.split(' ').length > 40 ? '.......' : ''}
+        </p>
+      )}
       {!isSelected && (
         <button onClick={() => onRecommend(product.product)}>
           View Recommendations
@@ -59,6 +64,8 @@ const Dashboard = ({ loggedIn }) => {
   const [recommendations, setRecommendations] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sortOrder, setSortOrder] = useState('default');
+  const [recommendSortOrder, setRecommendSortOrder] = useState('default');
 
   const fetchRandomProducts = async () => {
     try {
@@ -92,6 +99,47 @@ const Dashboard = ({ loggedIn }) => {
     }
   };
 
+  const handleSortChange = (e) => {
+    const order = e.target.value;
+    setSortOrder(order);
+
+    const sortFn = (a, b) => {
+      if (order === 'lowToHigh') return a.sale_price - b.sale_price;
+      if (order === 'highToLow') return b.sale_price - a.sale_price;
+      return 0;
+    };
+
+    const sorted = [...products].sort(sortFn);
+    setProducts(sorted);
+  };
+
+  const handleRecommendSortChange = (e) => {
+    const order = e.target.value;
+    setRecommendSortOrder(order);
+
+    const sortFn = (a, b) => {
+      if (order === 'lowToHigh') return a.sale_price - b.sale_price;
+      if (order === 'highToLow') return b.sale_price - a.sale_price;
+      return 0; // default
+    };
+
+    const sorted = [...recommendations].sort(sortFn);
+    setRecommendations(sorted);
+  };
+
+  useEffect(() => {
+    if (recommendations.length > 0) {
+      const sortFn = (a, b) => {
+        if (recommendSortOrder === 'lowToHigh') return a.sale_price - b.sale_price;
+        if (recommendSortOrder === 'highToLow') return b.sale_price - a.sale_price;
+        return 0; // default
+      };
+
+      const sorted = [...recommendations].sort(sortFn);
+      setRecommendations(sorted);
+    }
+  }, [recommendSortOrder]);
+
   useEffect(() => {
     if (loggedIn) fetchRandomProducts();
   }, [loggedIn]);
@@ -121,14 +169,43 @@ const Dashboard = ({ loggedIn }) => {
 
               <div className="recommendations">
                 <h2>Recommended Products</h2>
+
+                {/* Sorting dropdown for recommendations */}
+                <div className="sort-section">
+                  <label htmlFor="recommend-sort">Sort by Price:</label>
+                  <select
+                    id="recommend-sort"
+                    value={recommendSortOrder}
+                    onChange={handleRecommendSortChange}
+                  >
+                    <option value="default">Default</option>
+                    <option value="lowToHigh">Low to High</option>
+                    <option value="highToLow">High to Low</option>
+                  </select>
+                </div>
+
                 <div className="product-grid">
                   {recommendations.map((product) => (
-                    <ProductCard key={product.product} product={product} />
+                    <ProductCard
+                      key={product.product}
+                      product={product}
+                      onRecommend={fetchRecommendations}
+                    />
                   ))}
                 </div>
               </div>
             </div>
           )}
+
+          {/* Sorting based in price */}
+          <div className="sort-section">
+            <label htmlFor="sort">Sort by Price:</label>
+            <select id="sort" value={sortOrder} onChange={handleSortChange}>
+              <option value="default">Default</option>
+              <option value="lowToHigh">Low to High</option>
+              <option value="highToLow">High to Low</option>
+            </select>
+          </div>
 
           {/* Random Products Grid */}
           <div className="all-products">

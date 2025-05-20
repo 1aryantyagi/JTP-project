@@ -4,9 +4,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 from urllib.parse import unquote
-import logging
-
 from main import get_recommendations, get_random_products
+
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -18,8 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+
 
 class Product(BaseModel):
     product: str
@@ -56,7 +57,7 @@ async def get_random_products_endpoint():
 
 @app.get("/recommend/{product_name}", response_model=RecommendationsResponse, tags=["Recommendations"])
 async def get_recommendations_endpoint(product_name: str):
-    logger.info(f"Request received for recommendations of: {decoded_name}")
+    logger.info(f"Request received for recommendations of: {product_name}")
     decoded_name = unquote(product_name)
     try:
         recommendations = get_recommendations(decoded_name)
