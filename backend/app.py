@@ -1,4 +1,3 @@
-# app.py
 from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,11 +18,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Setup basic logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Define response models with complete product details
 class Product(BaseModel):
     product: str
     category: List[str]
@@ -32,7 +29,6 @@ class Product(BaseModel):
     sale_price: float
     description: Optional[str] = None
     type: List[str]
-    # Add other fields as needed from your dataset
 
 class RecommendationsResponse(BaseModel):
     recommendations: List[Product]
@@ -47,9 +43,7 @@ async def root():
 
 @app.get("/random_products", response_model=RandomProductsResponse, tags=["Products"])
 async def get_random_products_endpoint():
-    """
-    Retrieve a list of random products with full details
-    """
+    logger.info("Request received for random products")
     try:
         products = get_random_products()
         return {"products": products}
@@ -62,9 +56,7 @@ async def get_random_products_endpoint():
 
 @app.get("/recommend/{product_name}", response_model=RecommendationsResponse, tags=["Recommendations"])
 async def get_recommendations_endpoint(product_name: str):
-    """
-    Get product recommendations with full details based on the given product name
-    """
+    logger.info(f"Request received for recommendations of: {decoded_name}")
     decoded_name = unquote(product_name)
     try:
         recommendations = get_recommendations(decoded_name)

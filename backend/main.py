@@ -1,3 +1,7 @@
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 import pandas as pd
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
@@ -27,10 +31,12 @@ def parse_list_fields(row, list_fields):
 def get_recommendations(product_name, topn=10):
     try:
         decoded = unquote(product_name)
+        logger.info(f"Getting recommendations for: {decoded}")
         idx = indices[decoded]
         if isinstance(idx, pd.Series):
             idx = idx.iloc[0]
     except KeyError:
+        logger.warning(f"Product not found: {product_name}")
         return None
 
     sim_scores = list(enumerate(cosine_sim[idx]))
@@ -47,10 +53,13 @@ def get_recommendations(product_name, topn=10):
         filtered = {k: v for k, v in row.items() if k not in exclude_keys}
         recommendations.append(filtered)
 
+    logger.info(f"Found {len(recommendations)} recommendations for {decoded}")
     return recommendations
 
 def get_random_products(n=15):
+    logger.info(f"Fetching {n} random products")
     sample_df = df.sample(n=n).copy()
     list_fields = ['category', 'sub_category', 'type']
     sample_df = sample_df.apply(lambda row: parse_list_fields(row, list_fields), axis=1)
+    logger.info("Random products fetched successfully")
     return sample_df.to_dict('records')
