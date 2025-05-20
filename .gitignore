@@ -1,0 +1,24 @@
+# === Python cache and bytecode ===
+__pycache__/
+*.py[cod]
+
+# === Virtual environments ===
+venv/
+ENV/
+env/
+
+# === VSCode and PyCharm settings ===
+.vscode/
+.idea/
+
+# === OS-specific files ===
+.DS_Store
+Thumbs.db
+
+
+# === Log files ===
+*.log
+
+# === Env files ===
+.env
+.env.*
