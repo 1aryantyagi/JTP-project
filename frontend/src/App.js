@@ -36,7 +36,7 @@ const Login = ({ setLoggedIn }) => {
   );
 };
 
-const ProductCard = ({ product, onRecommend, isSelected = false }) => {
+const ProductCard = ({ product, onRecommend, addToCart, isSelected = false }) => {
   return (
     <div className={`product-card ${isSelected ? 'selected' : ''}`}>
       <h3>{product.product}</h3>
@@ -51,15 +51,21 @@ const ProductCard = ({ product, onRecommend, isSelected = false }) => {
         </p>
       )}
       {!isSelected && (
-        <button onClick={() => onRecommend(product.product)}>
-          View Recommendations
-        </button>
+        <div className="product-actions">
+          <button onClick={() => onRecommend(product.product)}>
+            View Recommendations
+          </button>
+          <button onClick={() => addToCart(product)}>
+            Add to Cart
+          </button>
+        </div>
       )}
     </div>
   );
 };
 
 const Dashboard = ({ loggedIn }) => {
+  const [cartItems, setCartItems] = useState([]);
   const [products, setProducts] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -127,6 +133,19 @@ const Dashboard = ({ loggedIn }) => {
     setRecommendations(sorted);
   };
 
+  const addToCart = (product) => {
+    setCartItems(prev => [...prev, {
+      product: product.product,
+      price: product.sale_price
+    }]);
+  };
+
+  const removeFromCart = (index) => {
+    setCartItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const cartTotal = cartItems.reduce((sum, item) => sum + item.price, 0)
+
   useEffect(() => {
     if (recommendations.length > 0) {
       const sortFn = (a, b) => {
@@ -190,8 +209,45 @@ const Dashboard = ({ loggedIn }) => {
                       key={product.product}
                       product={product}
                       onRecommend={fetchRecommendations}
+                      addToCart={addToCart}
                     />
                   ))}
+                </div>
+
+                {/* Cart Sidebar */}
+                <div className="cart-sidebar">
+                  <h2>Shopping Cart ({cartItems.length})</h2>
+                  {cartItems.length === 0 ? (
+                    <p className="empty-cart">Your cart is empty</p>
+                  ) : (
+                    <>
+                      <ul className="cart-items">
+                        {cartItems.map((item, index) => (
+                          <li key={index} className="cart-item">
+                            <div className="cart-item-info">
+                              <span className="cart-item-name">{item.product}</span>
+                              <span className="cart-item-price">₹{item.price.toFixed(2)}</span>
+                            </div>
+                            <button
+                              className="remove-item"
+                              onClick={() => removeFromCart(index)}
+                            >
+                              x
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="cart-summary">
+                        <div className="cart-total">
+                          <span>Total:</span>
+                          <span>₹{cartTotal.toFixed(2)}</span>
+                        </div>
+                        <button className="checkout-btn">
+                          Proceed to Checkout
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -216,13 +272,15 @@ const Dashboard = ({ loggedIn }) => {
                   key={product.product}
                   product={product}
                   onRecommend={fetchRecommendations}
+                  addToCart={addToCart}
                 />
               ))}
             </div>
           </div>
         </>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 };
 
