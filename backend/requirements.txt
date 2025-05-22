@@ -1,7 +1,6 @@
-pandas
 scikit-learn
 fastapi
 uvicorn
 asyncpg
 pydantic
-asyncpg
+python-dotenv
