@@ -1,65 +1,55 @@
 import logging
-logging.basicConfig(level=logging.INFO)
+import asyncpg
+import os
+from typing import List, Dict, Any
+from dotenv import load_dotenv
+
+load_dotenv()
+
 logger = logging.getLogger(__name__)
 
-import pandas as pd
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
-from urllib.parse import unquote
-import ast
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-df = pd.read_csv('BigBasket_Products_emb.csv')
-
-df['embedding'] = df['embedding'].apply(ast.literal_eval)
-
-embeddings = np.array(df['embedding'].to_list())
-
-cosine_sim = cosine_similarity(embeddings, embeddings)
-
-df = df.reset_index(drop=True)
-indices = pd.Series(df.index, index=df['product']).drop_duplicates()
-
-def parse_list_fields(row, list_fields):
-    for field in list_fields:
-        if isinstance(row[field], str) and row[field].startswith("["):
-            try:
-                row[field] = ast.literal_eval(row[field])
-            except:
-                row[field] = []
-    return row
-    
-def get_recommendations(product_name, topn=10):
+async def get_recommendations(product_name: str, pool, topn: int = 10) -> List[Dict[str, Any]]:
     try:
-        decoded = unquote(product_name)
-        logger.info(f"Getting recommendations for: {decoded}")
-        idx = indices[decoded]
-        if isinstance(idx, pd.Series):
-            idx = idx.iloc[0]
-    except KeyError:
-        logger.warning(f"Product not found: {product_name}")
-        return None
+        async with pool.acquire() as conn:
+            target = await conn.fetchrow(
+                "SELECT embedding FROM products WHERE product = $1", 
+                product_name
+            )
+            
+            if not target:
+                return []
+            
+            results = await conn.fetch(
+                """
+                SELECT product, category, sub_category, brand, sale_price, description 
+                FROM products 
+                WHERE product != $1
+                ORDER BY embedding <=> $2
+                LIMIT $3
+                """,
+                product_name, target['embedding'], topn
+            )
+            
+            return [dict(record) for record in results]
+            
+    except Exception as e:
+        logger.error(f"Database error: {e}")
+        return []
 
-    sim_scores = list(enumerate(cosine_sim[idx]))
-    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-    sim_scores = sim_scores[1: topn+1]
-    rec_idxs = [i for i, _ in sim_scores]
-
-    exclude_keys = {'embedding', 'rating', 'soup', 'index'}
-    list_fields = ['category', 'sub_category', 'type']
-
-    recommendations = []
-    for _, row in df.iloc[rec_idxs].copy().iterrows():
-        row = parse_list_fields(row, list_fields)
-        filtered = {k: v for k, v in row.items() if k not in exclude_keys}
-        recommendations.append(filtered)
-
-    logger.info(f"Found {len(recommendations)} recommendations for {decoded}")
-    return recommendations
-
-def get_random_products(n=15):
-    logger.info(f"Fetching {n} random products")
-    sample_df = df.sample(n=n).copy()
-    list_fields = ['category', 'sub_category', 'type']
-    sample_df = sample_df.apply(lambda row: parse_list_fields(row, list_fields), axis=1)
-    logger.info("Random products fetched successfully")
-    return sample_df.to_dict('records')
+async def get_random_products(pool, n: int = 15) -> List[Dict[str, Any]]:
+    try:
+        async with pool.acquire() as conn:
+            results = await conn.fetch(
+                """
+                SELECT product, category, sub_category, brand, sale_price, description
+                FROM products 
+                ORDER BY RANDOM() LIMIT $1
+                """,
+                n
+            )
+            return [dict(record) for record in results]
+    except Exception as e:
+        logger.error(f"Database error: {e}")
+        return []

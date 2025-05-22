@@ -5,6 +5,12 @@ from pydantic import BaseModel
 from typing import List, Optional
 from urllib.parse import unquote
 from main import get_recommendations, get_random_products
+import asyncio
+import asyncpg
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -20,7 +26,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+DATABASE_URL = os.getenv("DATABASE_URL")
 
+pool = None
+
+async def get_db_pool():
+    global pool
+    if pool is None:
+        pool = await asyncpg.create_pool(
+            dsn=DATABASE_URL,
+            min_size=5,
+            max_size=20
+        )
+    return pool
 
 class Product(BaseModel):
     product: str
@@ -29,7 +47,7 @@ class Product(BaseModel):
     brand: str
     sale_price: float
     description: Optional[str] = None
-    type: List[str]
+    type: Optional[List[str]] = None
 
 class RecommendationsResponse(BaseModel):
     recommendations: List[Product]
@@ -46,7 +64,7 @@ async def root():
 async def get_random_products_endpoint():
     logger.info("Request received for random products")
     try:
-        products = get_random_products()
+        products = await get_random_products(pool)
         return {"products": products}
     except Exception as e:
         logger.error(f"Error fetching random products: {e}")
@@ -60,7 +78,7 @@ async def get_recommendations_endpoint(product_name: str):
     logger.info(f"Request received for recommendations of: {product_name}")
     decoded_name = unquote(product_name)
     try:
-        recommendations = get_recommendations(decoded_name)
+        recommendations = await get_recommendations(decoded_name, pool)
         if not recommendations:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -75,3 +93,13 @@ async def get_recommendations_endpoint(product_name: str):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error"
         )
+
+@app.on_event("startup")
+async def startup():
+    global pool
+    pool = await get_db_pool()
+
+@app.on_event("shutdown")
+async def shutdown():
+    if pool:
+        await pool.close()
