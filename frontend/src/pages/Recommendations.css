@@ -1,0 +1,58 @@
+/* src/pages/Recommendations.css */
+.recommendations-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.selected-product-section {
+    margin-bottom: 3rem;
+    position: sticky;
+    top: 80px;
+    z-index: 10;
+    background: white;
+    padding: 1rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.selected-product-section h2 {
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+}
+
+.selected-product-card {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.recommendations-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.section-header h2 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.section-header select {
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    border: 1px solid #bdc3c7;
+}
+
+.recommendations-grid {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+}

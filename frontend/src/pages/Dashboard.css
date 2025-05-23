@@ -1,0 +1,63 @@
+/* src/pages/Dashboard.css */
+.dashboard {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    gap: 1rem;
+}
+
+.controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.refresh-btn {
+    padding: 0.5rem 1rem;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.refresh-btn:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+}
+
+.refresh-btn:hover:not(:disabled) {
+    background-color: #2980b9;
+}
+
+.dashboard-header select {
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    border: 1px solid #bdc3c7;
+    background-color: white;
+}
+
+.products-grid {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+@media (max-width: 768px) {
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .products-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+}

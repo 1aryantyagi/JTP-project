@@ -26,19 +26,38 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = "postgresql://postgres:postgres@postgres:5432/bigbasket_local"
 
 pool = None
 
 async def get_db_pool():
     global pool
     if pool is None:
-        pool = await asyncpg.create_pool(
-            dsn=DATABASE_URL,
-            min_size=5,
-            max_size=20
-        )
+        retries = 5
+        delay = 2
+        for attempt in range(retries):
+            try:
+                logger.info(f"Attempt {attempt+1}/{retries}: Creating database connection pool...")
+                pool = await asyncpg.create_pool(
+                    dsn=DATABASE_URL,
+                    min_size=5,
+                    max_size=20,
+                    timeout=30
+                )
+                await test_connection(pool)
+                logger.info("Successfully created database connection pool")
+                return pool
+            except Exception as e:
+                logger.warning(f"Connection attempt {attempt+1} failed: {e}")
+                if attempt < retries - 1:
+                    await asyncio.sleep(delay * (attempt + 1))
+                    continue
+                raise
     return pool
+
+async def test_connection(pool):
+    async with pool.acquire() as connection:
+        await connection.execute("SELECT 1")
 
 class Product(BaseModel):
     product: str
@@ -57,13 +76,13 @@ class RandomProductsResponse(BaseModel):
 
 @app.get("/", tags=["Root"])
 async def root():
-    """Health check endpoint"""
     return {"message": "Product Recommendation API is running."}
 
 @app.get("/random_products", response_model=RandomProductsResponse, tags=["Products"])
 async def get_random_products_endpoint():
     logger.info("Request received for random products")
     try:
+        pool = await get_db_pool()
         products = await get_random_products(pool)
         return {"products": products}
     except Exception as e:
@@ -78,6 +97,7 @@ async def get_recommendations_endpoint(product_name: str):
     logger.info(f"Request received for recommendations of: {product_name}")
     decoded_name = unquote(product_name)
     try:
+        pool = await get_db_pool()
         recommendations = await get_recommendations(decoded_name, pool)
         if not recommendations:
             raise HTTPException(
@@ -96,8 +116,7 @@ async def get_recommendations_endpoint(product_name: str):
 
 @app.on_event("startup")
 async def startup():
-    global pool
-    pool = await get_db_pool()
+    await get_db_pool()
 
 @app.on_event("shutdown")
 async def shutdown():

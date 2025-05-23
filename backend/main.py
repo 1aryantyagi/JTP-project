@@ -8,7 +8,7 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = "postgresql://postgres:postgres@postgres:5432/bigbasket_local"
 
 async def get_recommendations(product_name: str, pool, topn: int = 10) -> List[Dict[str, Any]]:
     try:
