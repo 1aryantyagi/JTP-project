@@ -5,10 +5,11 @@ import {
   Routes,
   Route,
   Navigate,
-  Outlet  // Add this import
+  Outlet
 } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
+import { ViewedProductsProvider } from './contexts/ViewedProductsContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Recommendations from './pages/Recommendations';
@@ -21,16 +22,21 @@ export default function App() {
     <Router>
       <AuthProvider>
         <CartProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<ProtectedRoute />}>
-              <Route path="/" element={<Layout />}>
-                <Route index element={<Dashboard />} />
-                <Route path="recommendations/:productId" element={<Recommendations />} />
-                <Route path="cart" element={<Cart />} />
+          <ViewedProductsProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={<ProtectedRoute />}>
+                <Route path="/" element={<Layout />}>
+                  <Route index element={<Dashboard />} />
+                  <Route
+                    path="recommendations/:productId"
+                    element={<Recommendations />}
+                  />
+                  <Route path="cart" element={<Cart />} />
+                </Route>
               </Route>
-            </Route>
-          </Routes>
+            </Routes>
+          </ViewedProductsProvider>
         </CartProvider>
       </AuthProvider>
     </Router>
