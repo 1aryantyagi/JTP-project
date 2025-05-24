@@ -26,7 +26,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DATABASE_URL = "postgresql://postgres:postgres@postgres:5432/bigbasket_local"
+DATABASE_URL = "postgresql://db58_user:FWmXvvOVdAIyZYVlPTZ94kXWcImKLmrL@dpg-d0oh27emcj7s73d61sn0-a.singapore-postgres.render.com/db58"
 
 pool = None
 
