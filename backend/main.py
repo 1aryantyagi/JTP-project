@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 DATABASE_URL = "postgresql://postgres:postgres@postgres:5432/bigbasket_local"
 
-async def get_recommendations(product_name: str, pool, topn: int = 15, sample_size: int = 7) -> List[Dict[str, Any]]:
+async def get_recommendations(product_name: str, pool, topn: int = 12, sample_size: int = 7) -> List[Dict[str, Any]]:
     try:
         async with pool.acquire() as conn:
             target = await conn.fetchrow(
