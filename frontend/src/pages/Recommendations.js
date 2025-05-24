@@ -1,4 +1,3 @@
-// src/pages/Recommendations.js
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';

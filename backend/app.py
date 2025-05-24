@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 from urllib.parse import unquote
-from main import get_recommendations, get_random_products
+from main import get_recommendations, get_random_products, get_cart_recommendations
 import asyncio
 import asyncpg
 import os
@@ -74,6 +74,9 @@ class RecommendationsResponse(BaseModel):
 class RandomProductsResponse(BaseModel):
     products: List[Product]
 
+class CartRecommendationRequest(BaseModel):
+    product_names: List[str]
+
 @app.get("/", tags=["Root"])
 async def root():
     return {"message": "Product Recommendation API is running."}
@@ -109,6 +112,20 @@ async def get_recommendations_endpoint(product_name: str):
         raise
     except Exception as e:
         logger.error(f"Error fetching recommendations for {decoded_name}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal Server Error"
+        )
+
+@app.post("/recommend/cart", response_model=RecommendationsResponse, tags=["Recommendations"])
+async def get_cart_recommendations_endpoint(request: CartRecommendationRequest):
+    logger.info(f"Request received for cart recommendations")
+    try:
+        pool = await get_db_pool()
+        recommendations = await get_cart_recommendations(request.product_names, pool)
+        return {"recommendations": recommendations}
+    except Exception as e:
+        logger.error(f"Error fetching cart recommendations: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error"

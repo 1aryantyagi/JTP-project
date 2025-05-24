@@ -1,10 +1,34 @@
-// src/pages/Cart.js
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCart } from '../contexts/CartContext';
+import ProductCard from '../components/ProductCard';
+import { fetchCartRecommendations } from '../services/api';
 import './Cart.css';
 
 const Cart = () => {
     const { cartItems, removeFromCart, cartTotal } = useCart();
+    const [cartRecommendations, setCartRecommendations] = useState([]);
+    const [recLoading, setRecLoading] = useState(false);
+    const [recError, setRecError] = useState('');
+
+    useEffect(() => {
+        if (cartItems.length > 0) {
+            setRecLoading(true);
+            setRecError('');
+            const productNames = cartItems.map(item => item.product);
+
+            fetchCartRecommendations(productNames)
+                .then(response => {
+                    setCartRecommendations(response.data.recommendations);
+                    setRecLoading(false);
+                })
+                .catch(error => {
+                    setRecError('Failed to load recommendations');
+                    setRecLoading(false);
+                });
+        } else {
+            setCartRecommendations([]);
+        }
+    }, [cartItems]);
 
     return (
         <div className="cart-page">
@@ -38,6 +62,29 @@ const Cart = () => {
                             <button className="checkout-btn">
                                 Proceed to Checkout
                             </button>
+                        </div>
+
+                        <div className="cart-recommendations">
+                            <h3>Frequently Bought Together</h3>
+                            {recLoading && (
+                                <div className="loader">
+                                    <div className="loading-spinner"></div>
+                                    Loading recommendations...
+                                </div>
+                            )}
+                            {recError && (
+                                <div className="error-message">{recError}</div>
+                            )}
+                            {!recLoading && !recError && (
+                                <div className="recommendations-grid">
+                                    {cartRecommendations.map(product => (
+                                        <ProductCard
+                                            key={product.product}
+                                            product={product}
+                                        />
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </>
                 )}
