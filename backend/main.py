@@ -9,7 +9,7 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-DATABASE_URL = "postgresql://db58_user:FWmXvvOVdAIyZYVlPTZ94kXWcImKLmrL@dpg-d0oh27emcj7s73d61sn0-a.singapore-postgres.render.com/db58"
+DATABASE_URL = "postgresql://postgres:postgres@postgres:5432/bigbasket_local"
 
 async def get_recommendations(product_name: str, pool, topn: int = 15, sample_size: int = 7) -> List[Dict[str, Any]]:
     try:
