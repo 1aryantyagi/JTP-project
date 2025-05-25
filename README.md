@@ -10,11 +10,9 @@ This repository contains a full-stack product recommendation system inspired by 
 - [Architecture](#architecture)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
-- [Running the Application](#running-the-application)
 - [Project Structure](#project-structure)
 - [API Endpoints](#api-endpoints)
 - [Troubleshooting](#troubleshooting)
-- [License](#license)
 
 ---
 
