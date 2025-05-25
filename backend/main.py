@@ -13,6 +13,23 @@ logger = logging.getLogger(__name__)
 DATABASE_URL = "postgresql://postgres:postgres@postgres:5432/bigbasket_local"
 
 async def get_recommendations(product_name: str, pool, topn: int = 12, sample_size: int = 7) -> List[Dict[str, Any]]:
+    """
+    Retrieve product recommendations based on vector similarity.
+
+    This function fetches the embedding of the given product and retrieves the top-N
+    most similar products using vector similarity (<=>) from a PostgreSQL database.
+    From these, it returns a random sample of results for variety.
+
+    Args:
+        product_name (str): The name of the product for which recommendations are needed.
+        pool: The asyncpg database connection pool.
+        topn (int, optional): Number of top similar products to consider. Default is 12.
+        sample_size (int, optional): Number of products to return from the top results. Default is 7.
+
+    Returns:
+        List[Dict[str, Any]]: A list of recommended products as dictionaries. Returns
+        an empty list if the target product is not found or an error occurs.
+    """
     try:
         async with pool.acquire() as conn:
             target = await conn.fetchrow(
@@ -43,6 +60,22 @@ async def get_recommendations(product_name: str, pool, topn: int = 12, sample_si
         return []
 
 async def get_random_products(pool, n: int = 15) -> List[Dict[str, Any]]:
+
+    """
+    Fetch a random sample of products from the database.
+
+    This function queries the `products` table to retrieve a random selection of
+    product entries, limited by the specified number.
+
+    Args:
+        pool: The asyncpg database connection pool.
+        n (int, optional): Number of random products to retrieve. Default is 15.
+
+    Returns:
+        List[Dict[str, Any]]: A list of product records as dictionaries. 
+        Returns an empty list if a database error occurs.
+    """
+
     try:
         async with pool.acquire() as conn:
             results = await conn.fetch(
@@ -59,6 +92,29 @@ async def get_random_products(pool, n: int = 15) -> List[Dict[str, Any]]:
         return []
 
 async def get_cart_recommendations(product_names: List[str], pool, topn: int = 12) -> List[Dict[str, Any]]:
+
+    """
+    Generate product recommendations based on a list of products in the user's cart.
+
+    For each product in the cart, this function retrieves its embedding and fetches the top-N
+    similar products using vector similarity. It then aggregates and ranks the most frequently
+    recommended items across all input products, excluding those already in the cart.
+    
+        - Uses the pgvector `<=>` operator for embedding similarity.
+        - Each product in the cart contributes its own top-N similar products.
+        - Duplicate recommendations are merged and ranked by frequency.
+        - Products already present in the cart are excluded from the result.
+
+    Args:
+        product_names (List[str]): List of product names currently in the user's cart.
+        pool: The asyncpg database connection pool.
+        topn (int, optional): Number of final recommended products to return. Default is 12.
+
+    Returns:
+        List[Dict[str, Any]]: A list of recommended product dictionaries, ranked by relevance.
+        Returns an empty list if no recommendations can be made or if an error occurs.
+    """
+
     try:
         async with pool.acquire() as conn:
             topn_per_product = 8

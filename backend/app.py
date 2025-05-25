@@ -31,6 +31,23 @@ DATABASE_URL = "postgresql://postgres:postgres@postgres:5432/bigbasket_local"
 pool = None
 
 async def get_db_pool():
+    """
+    Create and return a global asyncpg database connection pool.
+
+    This function attempts to create a global database connection pool using
+    `asyncpg.create_pool`. It will retry the connection up to 5 times with an 
+    exponential backoff delay if a failure occurs.
+
+    - Uses global `pool` variable to ensure only one pool is created.
+    - Logs each connection attempt and success or failure.
+    - Calls `test_connection(pool)` to verify the connection before returning.
+
+    Returns:
+        asyncpg.pool.Pool: The database connection pool.
+
+    Raises:
+        Exception: If all retry attempts to create the pool fail.
+    """
     global pool
     if pool is None:
         retries = 5
@@ -83,6 +100,17 @@ async def root():
 
 @app.get("/random_products", response_model=RandomProductsResponse, tags=["Products"])
 async def get_random_products_endpoint():
+
+    """
+    Handles GET requests to fetch a list of random products.
+
+    - Connects to the database using a connection pool.
+    - Retrieves random product entries.
+    - Returns them in the format defined by RandomProductsResponse.
+    - Logs request and errors.
+    - Returns a 500 error if something goes wrong during the process.
+    """
+
     logger.info("Request received for random products")
     try:
         pool = await get_db_pool()
@@ -97,6 +125,24 @@ async def get_random_products_endpoint():
 
 @app.get("/recommend/{product_name}", response_model=RecommendationsResponse, tags=["Recommendations"])
 async def get_recommendations_endpoint(product_name: str):
+
+    """
+    Handles GET requests to fetch product recommendations based on a given product name.
+
+    - Decodes the product name from the URL.
+    - Connects to the database using a connection pool.
+    - Retrieves a list of recommended products using the provided name.
+    - Returns a 404 error if no recommendations are found.
+    - Returns a 500 error if an unexpected error occurs.
+    - Logs the request and any exceptions encountered.
+    
+    Args:
+        product_name (str): The name of the product for which recommendations are requested.
+
+    Returns:
+        dict: A dictionary with a "recommendations" key containing the list of recommended products.
+    """
+
     logger.info(f"Request received for recommendations of: {product_name}")
     decoded_name = unquote(product_name)
     try:
@@ -119,6 +165,24 @@ async def get_recommendations_endpoint(product_name: str):
 
 @app.post("/recommend/cart", response_model=RecommendationsResponse, tags=["Recommendations"])
 async def get_cart_recommendations_endpoint(request: CartRecommendationRequest):
+
+    """
+    Handles POST requests to fetch product recommendations based on the contents of a shopping cart.
+
+    - Accepts a list of product names in the request body.
+    - Connects to the database using a connection pool.
+    - Retrieves a list of recommended products based on the provided cart items.
+    - Returns the recommendations in the format defined by RecommendationsResponse.
+    - Logs the request and any exceptions that occur.
+    - Returns a 500 error if an unexpected error is encountered.
+
+    Args:
+        request (CartRecommendationRequest): Request body containing a list of product names.
+
+    Returns:
+        dict: A dictionary with a "recommendations" key containing the list of recommended products.
+    """
+
     logger.info(f"Request received for cart recommendations")
     try:
         pool = await get_db_pool()
