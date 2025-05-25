@@ -43,8 +43,9 @@ This repository contains a full-stack product recommendation system inspired by 
 
 ## Prerequisites
 
-- [Docker](https://www.docker.com/get-started) and [Docker Compose](https://docs.docker.com/compose/install/)
-- (Optional) [Git](https://git-scm.com/) for cloning the repository
+- Docker
+- Git
+- VSCode (Any other IDE)
 
 ---
 
@@ -54,13 +55,13 @@ This repository contains a full-stack product recommendation system inspired by 
 
 ```sh
 git clone https://github.com/1aryantyagi/JTP-project
-cd TechPro
+cd JTP-project
 ```
 
 ### 2. Directory Structure
 
 ```
-TechPro/
+JTP-project/
 ├── backend/
 │   ├── app.py
 │   ├── main.py
@@ -133,6 +134,7 @@ The backend exposes the following endpoints:
   Returns recommendations based on a user’s cart contents.
 
 See [backend/README.md](backend/README.md) for more details in backend.
+See [frontend/README.md](frontend/README.md) for more details in backend.
 
 ---
 
