@@ -39,6 +39,8 @@ This repository contains a full-stack product recommendation system inspired by 
 - **Backend:** FastAPI app, exposes REST API, handles ML inference.
 - **Database:** PostgreSQL with pgvector extension for similarity search.
 
+![Alt text](./flow.jpg)
+
 ---
 
 ## Prerequisites
