@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 DATABASE_URL = "postgresql://postgres:postgres@postgres:5432/bigbasket_local"
 
-async def get_recommendations(product_name: str, pool, topn: int = 12, sample_size: int = 7) -> List[Dict[str, Any]]:
+async def get_recommendations(product_name: str, pool, topn: int = 10, sample_size: int = 6) -> List[Dict[str, Any]]:
     """
     Retrieve product recommendations based on vector similarity.
 
@@ -23,8 +23,8 @@ async def get_recommendations(product_name: str, pool, topn: int = 12, sample_si
     Args:
         product_name (str): The name of the product for which recommendations are needed.
         pool: The asyncpg database connection pool.
-        topn (int, optional): Number of top similar products to consider. Default is 12.
-        sample_size (int, optional): Number of products to return from the top results. Default is 7.
+        topn (int, optional): Number of top similar products to consider. Default is 10.
+        sample_size (int, optional): Number of products to return from the top results. Default is 6.
 
     Returns:
         List[Dict[str, Any]]: A list of recommended products as dictionaries. Returns

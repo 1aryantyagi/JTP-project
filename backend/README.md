@@ -27,7 +27,7 @@ Once trained, each product’s embedding is exported to `BigBasket_Products_emb.
 - **Embedding generation**  
   1. Load product metadata from CSV  
   2. Preprocess textual fields (tokenization, padding)  
-  3. Pass through `bb_encoder.h5` to obtain a 128-D embedding  
+  3. Pass through `bb_encoder.h5` to obtain a embedding  
   4. Save embeddings alongside original attributes in `BigBasket_Products_emb.csv`
 
 - **Database schema**  
@@ -100,3 +100,40 @@ Typical response times:
 2- Single product recs: 200-400ms
 
 3- Cart recs: 500-800ms (scales with cart size)
+
+## Model architecture
+
+The model is a hybrid of BiLSTM (Bidirectional LSTM) and Multi-Head Attention, followed by fully connected layers for generating embeddings. The input seems to be a sequence of tokens , and the final output has a shape of (None, 153) for embeddings.
+
+The model uses BiLSTM for sequence understanding, self-attention for focus, and dense layers.
+
+The combination of residuals, dropout, and normalization indicates a well-regularized, deep model.
+
+![Alt text](./ML_Model/model.png)
+
+## Architecture Explain
+
+1. Token Representation (Embedding Layer)
+
+    Each input token (e.g., word/subword) is mapped to a dense vector , capturing initial semantics.
+
+2. Contextual Understanding (BiLSTM Layers)
+
+    Two BiLSTM layers progressively capture forward and backward dependencies in the sequence.
+
+3. Self-Attention (MultiHeadAttention)
+
+    Attention allows the model to weigh the importance of different tokens, refining their interactions beyond simple sequential dependencies.
+
+    Helps especially in capturing long-range dependencies, critical for deep semantic understanding.
+
+4. Residual and Layer Norm
+
+    These are standard tricks (borrowed from transformers) to stabilize training and preserve gradients, improving representational quality.
+
+5. Sequence Pooling (GlobalMaxPooling1D)
+
+    This is crucial for converting sequences to embeddings.
+
+6. Dense Layers + LeakyReLU
+    After pooling, the vector is projected into higher dimensions (256 → 153) to become the final embedding vector.
