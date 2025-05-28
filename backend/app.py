@@ -20,10 +20,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Create main FastAPI app
 app = FastAPI()
 
-# Setup CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -32,10 +30,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Create API router for all endpoints under /api
 api_router = APIRouter()
 
-# Security setup with updated token URL
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 
@@ -44,6 +40,21 @@ DATABASE_URL = "postgresql://postgres:postgres@postgres:5432/bigbasket_local"
 pool = None
 
 async def get_db_pool():
+
+    """
+    Creates and returns a global asyncpg connection pool to the PostgreSQL database.
+
+    This function checks if a global `pool` is already initialized. If not, it attempts to create 
+    a new asyncpg connection pool with retry logic. The pool is tested with a sample query to ensure 
+    it's operational. If all retry attempts fail, the exception is raised.
+
+    Returns:
+        asyncpg.pool.Pool: The initialized database connection pool.
+
+    Raises:
+        Exception: If all attempts to create the pool fail.
+    """
+
     global pool
     if pool is None:
         retries = 5
@@ -72,7 +83,6 @@ async def test_connection(pool):
     async with pool.acquire() as connection:
         await connection.execute("SELECT 1")
 
-# Pydantic models
 class Product(BaseModel):
     product: str
     category: List[str]
@@ -105,14 +115,28 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
-# Root endpoint (not under /api)
 @app.get("/", tags=["Root"])
 async def root():
     return {"message": "Product Recommendation API is running."}
 
-# API endpoints (mounted under /api)
 @api_router.get("/random_products", response_model=RandomProductsResponse, tags=["Products"])
 async def get_random_products_endpoint():
+
+    """
+    GET endpoint to retrieve a list of random products from the database.
+
+    This endpoint logs the request, establishes a connection to the database 
+    using the connection pool, and fetches random product entries using 
+    the `get_random_products` function.
+
+    Returns:
+        dict: A dictionary with a `products` key containing a list of random product data.
+
+    Raises:
+        HTTPException: Returns a 500 Internal Server Error if database connection or 
+                       product retrieval fails.
+    """
+
     logger.info("Request received for random products")
     try:
         pool = await get_db_pool()
@@ -127,6 +151,25 @@ async def get_random_products_endpoint():
 
 @api_router.get("/recommend/{product_name}", response_model=RecommendationsResponse, tags=["Recommendations"])
 async def get_recommendations_endpoint(product_name: str):
+
+    """
+    GET endpoint to retrieve product recommendations based on a given product name.
+
+    This endpoint decodes the provided product name, retrieves a database connection 
+    pool, and fetches a list of recommended products using the `get_recommendations` function.
+
+    Args:
+        product_name (str): The name of the product to get recommendations for (URL-encoded).
+
+    Returns:
+        dict: A dictionary with a `recommendations` key containing a list of recommended products.
+
+    Raises:
+        HTTPException: 
+            - 404 Not Found if no recommendations are found for the given product.
+            - 500 Internal Server Error if an unexpected error occurs.
+    """
+
     logger.info(f"Request received for recommendations of: {product_name}")
     decoded_name = unquote(product_name)
     try:
@@ -149,6 +192,23 @@ async def get_recommendations_endpoint(product_name: str):
 
 @api_router.post("/recommend/cart", response_model=RecommendationsResponse, tags=["Recommendations"])
 async def get_cart_recommendations_endpoint(request: CartRecommendationRequest):
+
+    """
+    POST endpoint to retrieve product recommendations based on multiple items in a user's cart.
+
+    This endpoint receives a list of product names from the request body, retrieves a database 
+    connection pool, and returns recommendations using the `get_cart_recommendations` function.
+
+    Args:
+        request (CartRecommendationRequest): The request body containing a list of product names.
+
+    Returns:
+        dict: A dictionary with a `recommendations` key containing a list of recommended products.
+
+    Raises:
+        HTTPException: Returns a 500 Internal Server Error if recommendation fetching fails.
+    """
+
     logger.info(f"Request received for cart recommendations")
     try:
         pool = await get_db_pool()
@@ -163,6 +223,26 @@ async def get_cart_recommendations_endpoint(request: CartRecommendationRequest):
 
 @api_router.post("/register", response_model=User, tags=["Authentication"])
 async def register_user(user: UserCreate):
+
+    """
+    POST endpoint to register a new user.
+
+    This endpoint checks if the provided user ID already exists in the database. 
+    If it does not exist, it hashes the password and inserts the new user's 
+    information into the database.
+
+    Args:
+        user (UserCreate): The user registration data including name, user ID, and plain-text password.
+
+    Returns:
+        dict: A dictionary containing the newly created user's ID, name, and user ID.
+
+    Raises:
+        HTTPException:
+            - 400: If the user ID already exists in the database.
+            - 500: If an internal server error occurs during registration.
+    """
+    logger.info(f"Request received for user registration")
     try:
         pool = await get_db_pool()
         async with pool.acquire() as connection:
@@ -193,6 +273,26 @@ async def register_user(user: UserCreate):
 
 @api_router.post("/login", response_model=Token, tags=["Authentication"])
 async def login_user(form_data: OAuth2PasswordRequestForm = Depends()):
+
+    """
+    POST endpoint to authenticate a user and return an access token.
+
+    This endpoint verifies the provided user ID and password against stored credentials.
+    If valid, it encodes user data into a base64 token and returns it as a bearer token.
+
+    Args:
+        form_data (OAuth2PasswordRequestForm): The login form data containing `username` (user_id)
+                                               and `password`, passed via dependency injection.
+
+    Returns:
+        dict: A dictionary with the access token and its type (`bearer`).
+
+    Raises:
+        HTTPException:
+            - 401: If credentials are invalid (user not found or incorrect password).
+            - 500: If an internal server error occurs during the login process.
+    """
+    logger.info(f"Request received for user login")
     try:
         pool = await get_db_pool()
         async with pool.acquire() as connection:
@@ -224,10 +324,8 @@ async def login_user(form_data: OAuth2PasswordRequestForm = Depends()):
             detail="Internal server error"
         )
 
-# Mount the API router under /api prefix
 app.include_router(api_router, prefix="/api")
 
-# Startup/shutdown events
 @app.on_event("startup")
 async def startup():
     await get_db_pool()

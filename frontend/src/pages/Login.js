@@ -20,7 +20,6 @@ const Login = () => {
         setLoading(true);
 
         try {
-            // Convert to URL-encoded form data
             const formData = new URLSearchParams();
             formData.append('username', credentials.username);
             formData.append('password', credentials.password);

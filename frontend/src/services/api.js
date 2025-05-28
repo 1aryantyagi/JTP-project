@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-// Determine API base URL based on environment
 const isProduction = process.env.NODE_ENV === 'production';
 const API_BASE = isProduction
     ? '/api'
@@ -24,7 +23,6 @@ api.interceptors.response.use(response => {
     return response;
 }, error => {
     if (error.response && error.response.status === 401) {
-        // Token expired or invalid
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/login';

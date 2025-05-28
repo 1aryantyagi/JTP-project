@@ -30,7 +30,6 @@ const Dashboard = () => {
         const order = e.target.value;
         setSortOrder(order);
 
-        // Clone the array before sorting
         const sortedProducts = [...products].sort((a, b) => {
             const priceA = parseFloat(a.sale_price);
             const priceB = parseFloat(b.sale_price);
