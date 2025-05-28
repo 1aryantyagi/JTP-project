@@ -13,14 +13,24 @@ const Navbar = () => {
                 <Link to="/">Product Recommendations</Link>
             </div>
             <div className="navbar-links">
-                <Link to="/">Home</Link>
-                <Link to="/cart">
-                    Cart ({cartItems.length})
-                </Link>
-                {user && (
-                    <button onClick={logout} className="logout-btn">
-                        Logout
-                    </button>
+                {user ? (
+                    <>
+                        <Link to="/">Home</Link>
+                        <Link to="/cart">
+                            Cart ({cartItems.length})
+                        </Link>
+                        <span style={{ margin: '0 10px', color: '#3498db' }}>
+                            {user.name || user.username}
+                        </span>
+                        <button onClick={logout} className="logout-btn">
+                            Logout
+                        </button>
+                    </>
+                ) : (
+                    <>
+                        <Link to="/login">Login</Link>
+                        <Link to="/register">Register</Link>
+                    </>
                 )}
             </div>
         </nav>

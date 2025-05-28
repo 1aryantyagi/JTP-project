@@ -9,6 +9,8 @@ RUN npm install
 
 COPY . .
 
+ENV REACT_APP_API_BASE=/api
+
 RUN npm run build
 
 # Production stage
