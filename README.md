@@ -155,3 +155,38 @@ See [frontend/README.md](frontend/README.md) for more details in backend.
   If you change backend or frontend code, re-run `docker-compose up --build`.
 
 ---
+
+## Project Screenshots
+
+Login Page - User can Login with the ID or click on register
+![Alt text](/Screenshots/Login.jpg)
+
+Registration Page - User can register 
+![Alt text](/Screenshots/Register.jpg)
+
+Main Page - User can see various products also they click on Refresh Products to view new products
+
+User can view the products in the cart
+
+User can click on `View Recommendation` or `Add to cart`
+
+User can also Sort the Products on the basis of `price`
+![Alt text](/Screenshots/MainPage.jpg)
+
+Recommendation Page - User can view the Recommended products here
+
+Example:- `Biscuits - Digestive`
+![Alt text](/Screenshots/Recommendation.jpg)
+
+![Alt text](/Screenshots/Recommendation2.jpg)
+
+Example:- `Pasta Sause - Parmesan & Romano`
+![Alt text](/Screenshots/Recommendation3.jpg)
+
+Cart Page:- All the Add to cart items can we views here.
+
+Also based on all the items in the cart the recommendation can be viewed in the `Frequently Bought Together` section.
+![Alt text](/Screenshots/CartPage.jpg)
+
+Frequently Bought Together Section
+![Alt text](/Screenshots/CartRecommendation.jpg)
