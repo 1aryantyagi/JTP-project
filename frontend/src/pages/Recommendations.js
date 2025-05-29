@@ -16,6 +16,10 @@ const Recommendations = () => {
 
     useEffect(() => {
         const loadRecommendations = async () => {
+            setLoading(true); // Show loading state immediately
+            setRecommendations([]); // Clear previous recommendations
+            setSelectedProduct(null); // Reset selected product
+
             try {
                 const response = await fetchProductRecommendations(productId);
                 setSelectedProduct(response.data.selected_product);
@@ -28,7 +32,7 @@ const Recommendations = () => {
         };
 
         loadRecommendations();
-    }, [productId]);
+    }, [productId]); // Re-run when productId changes
 
     const handleSortChange = (e) => {
         const order = e.target.value;
@@ -46,13 +50,16 @@ const Recommendations = () => {
         setRecommendations(sorted);
     };
 
+    // Create a reversed copy for display without mutating original
+    const reversedViewedProducts = [...viewedProducts].reverse();
+
     return (
         <div className="recommendations-page">
             {/* Viewed Products Sidebar */}
             <div className="viewed-products-sidebar">
                 <h3>Recently Viewed</h3>
-                {viewedProducts.length > 0 ? (
-                    viewedProducts.reverse().map((product) => (
+                {reversedViewedProducts.length > 0 ? (
+                    reversedViewedProducts.map((product) => (
                         <div
                             key={product.product}
                             className="viewed-product"
@@ -69,22 +76,29 @@ const Recommendations = () => {
 
             {/* Main Content */}
             <div className="main-content">
-
                 <div className="recommendations-section">
                     <div className="section-header">
                         <h2>Recommended Products</h2>
-                        <select value={sortOrder} onChange={handleSortChange}>
+                        <select
+                            value={sortOrder}
+                            onChange={handleSortChange}
+                            disabled={loading} // Disable during loading
+                        >
                             <option value="default">Sort By</option>
                             <option value="lowToHigh">Price: Low to High</option>
                             <option value="highToLow">Price: High to Low</option>
                         </select>
                     </div>
 
-                    <div className="recommendations-grid">
-                        {recommendations.map(product => (
-                            <ProductCard key={product.product} product={product} />
-                        ))}
-                    </div>
+                    {loading ? (
+                        <div className="loading-indicator">Loading recommendations...</div>
+                    ) : (
+                        <div className="recommendations-grid">
+                            {recommendations.map(product => (
+                                <ProductCard key={product.product} product={product} />
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
