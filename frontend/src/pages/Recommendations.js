@@ -16,9 +16,9 @@ const Recommendations = () => {
 
     useEffect(() => {
         const loadRecommendations = async () => {
-            setLoading(true); // Show loading state immediately
-            setRecommendations([]); // Clear previous recommendations
-            setSelectedProduct(null); // Reset selected product
+            setLoading(true);
+            setRecommendations([]);
+            setSelectedProduct(null);
 
             try {
                 const response = await fetchProductRecommendations(productId);
@@ -32,7 +32,7 @@ const Recommendations = () => {
         };
 
         loadRecommendations();
-    }, [productId]); // Re-run when productId changes
+    }, [productId]);
 
     const handleSortChange = (e) => {
         const order = e.target.value;
@@ -50,12 +50,10 @@ const Recommendations = () => {
         setRecommendations(sorted);
     };
 
-    // Create a reversed copy for display without mutating original
     const reversedViewedProducts = [...viewedProducts].reverse();
 
     return (
         <div className="recommendations-page">
-            {/* Viewed Products Sidebar */}
             <div className="viewed-products-sidebar">
                 <h3>Recently Viewed</h3>
                 {reversedViewedProducts.length > 0 ? (
@@ -82,7 +80,7 @@ const Recommendations = () => {
                         <select
                             value={sortOrder}
                             onChange={handleSortChange}
-                            disabled={loading} // Disable during loading
+                            disabled={loading}
                         >
                             <option value="default">Sort By</option>
                             <option value="lowToHigh">Price: Low to High</option>
